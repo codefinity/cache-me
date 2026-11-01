@@ -29,7 +29,7 @@ Follow these steps on every invocation.
 
 1. Read the requirements. Inspect the repository read-only (existing `.sln`, `.slnx` and `.csproj` files, target frameworks, conventions; ignore `bin/` and `obj/`) so you don't ask what you can already see.
 2. Grill the user: challenge vague words ("fast", "secure", "simple", "flexible"), and point out contradictions, missing edge cases and unstated assumptions. Ask specific, hard questions, not a generic checklist.
-3. Make sure the following are decided by the end of this stage. Ask only about those not already answered. Many bullets hold several decisions; give each decision its own question (3.4):
+3. Make sure the following are decided by the end of this stage. Ask only about those not already answered. Many bullets hold several decisions; give each decision its own question (3.4); for example, C# language version, nullable reference types and warnings-as-errors are three questions:
    - Purpose of the library and its consumers (who calls it, from what kind of application).
    - Solution and project names, folder locations for source and tests, root namespace.
    - Target framework(s), C# language version, nullable reference types, warnings-as-errors.
@@ -113,7 +113,7 @@ Create a stage's folder when the stage starts, if it does not exist.
 - v3: <what changed compared with v2, and why>
 ```
 
-Set `Status` to **Awaiting answers** when the document has an open [Blocking] or [Important] question, otherwise to **Awaiting approval**. Use **Draft** only while a file is still being written.
+Set `Status` to **Awaiting answers** when the document has an open [Blocking] or [Important] question, otherwise to **Awaiting approval**. Use **Draft** only while a file is still being written. State the status only in this header, because approval changes only the header. Do not mention it anywhere else in the document, including the changelog.
 
 ### 3.4 Questions and answers
 
@@ -139,6 +139,7 @@ Rules:
   - moves resolved items to `## Decisions` (question, the user's answer verbatim, your one-line interpretation),
   - keeps unanswered questions open,
   - adds follow-up questions.
+- Keep every decision in `## Decisions`, in this form, in all later versions, including the final version. Technical decisions may refer to these entries but never replace them.
 - Repeat until no [Blocking] or [Important] question is open.
 - Close an open [Minor] question with its suggested default only if the user agrees, and record it under `## Assumptions` in a new version.
 
@@ -147,6 +148,7 @@ Rules:
 - A stage is complete only when the user explicitly approves a specific version: "approved", "approve v3", or running the command with `approved`. `approved` on its own means the latest version. "approve v<N>" means that version, even if it is not the newest; later files stay unapproved and the status file shows both, for example Latest v4, Approved v3.
 - If the reply is ambiguous (for example "looks fine, but …"), ask whether to mark it approved. **STOP and wait for the user.**
 - Do not approve a version that has an open [Blocking] or [Important] question. Say which questions are open. **STOP and wait for the user.**
+- Approval does not close [Minor] questions. If the version has an open [Minor] question, list them and ask whether to accept the suggested defaults or answer them. **STOP and wait for the user.** If the user agrees to the defaults, write `v<N+1>` recording them under `## Assumptions`, and **STOP and wait for the user** to approve that version.
 - Do not approve a version whose `Based on` line names an outdated upstream version. Produce `v<N+1>` against the current approved upstream documents, say why, and **STOP and wait for the user.**
 - On approval:
   1. Update the header of that version (3.2 exception).

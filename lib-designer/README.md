@@ -48,7 +48,7 @@ Run a stage's command again, with one of these after it:
 | `/lib-designer:analysis approve v3` | Approves that version, even if a newer file exists. The newer file stays unapproved. |
 | `/lib-designer:analysis <your change>` | Treats the text as a change request and writes a new version. |
 
-**Answer questions** in the document, under each question's `**Answer:**` line, then run the command with `answered`. You can also answer in chat, and your words are recorded verbatim in the next version. Questions are tagged [Blocking], [Important] or [Minor]. A version can't be approved while a [Blocking] or [Important] question is open.
+**Answer questions** in the document, under each question's `**Answer:**` line, then run the command with `answered`. You can also answer in chat, and your words are recorded verbatim in the next version. Questions are tagged [Blocking], [Important] or [Minor]. A version can't be approved while a [Blocking] or [Important] question is open. If only [Minor] questions are open, Claude asks whether to accept the suggested defaults, then records them in a new version for you to approve.
 
 **Resume** by running the stage's command. Each skill works out the current state from the status file and the latest document, so you can stop and come back in a new session.
 
