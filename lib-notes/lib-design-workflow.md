@@ -1,3 +1,5 @@
+Create a plugin in this project.
+
 # Workflow
 
 The requirements will be written in design-claude\lib-requirements.md.
@@ -52,6 +54,8 @@ Every request for modification should create a new version of the document.
 ## 5. Skill 5: Write Code
 
 Write code for the complete component.
+
+If you have any question on this prompt, please grill me and ask questions.
 
  
 

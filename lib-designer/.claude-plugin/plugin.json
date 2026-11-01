@@ -1,0 +1,6 @@
+{
+  "name": "lib-designer",
+  "description": "Stage-gated workflow for designing and building a C#/.NET library: analysis, configuration, API, tests, component design, implementation.",
+  "version": "1.0.0",
+  "author": { "name": "Nikhil P" }
+}
