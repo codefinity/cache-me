@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Common Caching Strategies</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --fg: #0f172a;
+      --muted: #475569;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --accent: #1d4ed8;
+      --good: #047857;
+      --bad: #b91c1c;
+      --chip: #eff6ff;
+      --code: #f1f5f9
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1220;
+        --fg: #e5e7eb;
+        --muted: #9ca3af;
+        --card: #111827;
+        --border: #1f2937;
+        --accent: #93c5fd;
+        --good: #6ee7b7;
+        --bad: #fca5a5;
+        --chip: #1e293b;
+        --code: #1f2937
+      }
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.6 'Segoe UI', Roboto, Helvetica, Arial, sans-serif
+    }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 16px 64px
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin: 0 0 .5rem
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin: 0
+    }
+
+    p {
+      margin: .5rem 0
+    }
+
+    a {
+      color: var(--accent)
+    }
+
+    .lead {
+      color: var(--muted);
+      max-width: 75ch
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 16px 0;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--muted);
+      font-size: .9rem
+    }
+
+    .legend svg {
+      flex: none
+    }
+
+    nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    nav a {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: var(--chip);
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 600
+    }
+
+    .strategy {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 28px 0
+    }
+
+    .strategy header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px
+    }
+
+    .tag {
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--accent)
+    }
+
+    .alias {
+      color: var(--muted);
+      font-size: .9rem
+    }
+
+    .diagram {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      margin: 16px auto
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin: 20px 0 8px
+    }
+
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0
+    }
+
+    .steps li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin: 6px 0
+    }
+
+    .badge {
+      flex: none;
+      min-width: 2.2rem;
+      text-align: center;
+      font-size: .8rem;
+      font-weight: 700;
+      padding: 1px 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--card)
+    }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px
+    }
+
+    .cols ul {
+      margin: 0;
+      padding-left: 1.2rem
+    }
+
+    .cols li {
+      margin: 4px 0
+    }
+
+    .good h3 {
+      color: var(--good)
+    }
+
+    .bad h3 {
+      color: var(--bad)
+    }
+
+    .best {
+      margin-top: 18px;
+      padding: 10px 14px;
+      border-left: 4px solid var(--accent);
+      background: var(--chip);
+      border-radius: 6px
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card)
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 640px;
+      font-size: .92rem
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top
+    }
+
+    th {
+      background: var(--code)
+    }
+
+    tr:last-child td {
+      border-bottom: 0
+    }
+
+    .combine li {
+      margin: 6px 0
+    }
+
+    footer {
+      margin-top: 40px;
+      color: var(--muted);
+      font-size: .85rem
+    }
+
+    @media (max-width:640px) {
+      .cols {
+        grid-template-columns: 1fr
+      }
+
+      .strategy {
+        padding: 16px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Common Caching Strategies</h1>
+    <p class="lead">A cache keeps copies of frequently used data close to the application so that most requests never
+      need to hit the (slower) database. <em>How</em> data moves between the application, the cache and the database is
+      the caching strategy. The six strategies below cover the common read patterns (cache-aside, read-through,
+      refresh-ahead) and write patterns (write-through, write-behind, write-around).</p>
+    <div class="legend"><svg width="150" height="22" viewBox="0 0 150 22" aria-hidden="true">
+        <defs>
+          <marker id="ah-legend" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        <path d="M2 11 H62" stroke="#374151" stroke-width="2" marker-end="url(#ah-legend)" fill="none" />
+        <path d="M86 11 H146" stroke="#374151" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#ah-legend)"
+          fill="none" />
+      </svg><span>Solid arrow: synchronous call. Dashed arrow: asynchronous (background) call. Step labels in the
+        diagrams match the numbered steps in the text.</span></div>
+    <nav aria-label="Strategies">
+      <ul>
+        <li><a href="#cache-aside">Cache-aside</a></li>
+        <li><a href="#read-through">Read-through</a></li>
+        <li><a href="#refresh-ahead">Refresh-ahead</a></li>
+        <li><a href="#write-through">Write-through</a></li>
+        <li><a href="#write-behind">Write-behind</a></li>
+        <li><a href="#write-around">Write-around</a></li>
+        <li><a href="#comparison">Comparison</a></li>
+        <li><a href="#combining-strategies">Combining</a></li>
+      </ul>
+    </nav>
+
+    <section class="strategy" id="cache-aside">
+      <header>
+        <h2>Cache-aside</h2><span class="tag">Read strategy</span><span class="alias">Also known as: Lazy loading</span>
+      </header>
+      <p>The application owns the caching logic. It looks in the cache first, and only on a miss does it go to the
+        database, copy the result into the cache and return it. Only data that is actually requested ever gets cached.
+      </p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" class="diagram" role="img"
+        aria-labelledby="t-cache-aside d-cache-aside" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+        <title id="t-cache-aside">Cache-aside diagram</title>
+        <desc id="d-cache-aside">The application checks the cache (1). On a hit it returns the data (2a). On a miss it
+          reads the database (2b), updates the cache (3) and returns the data (4).</desc>
+        <defs>
+          <marker id="ah-cache-aside" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+            orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        <rect x="1" y="1" width="598" height="348" rx="14" fill="#ffffff" stroke="#d1d5db" />
+        <rect x="150" y="150" width="130" height="56" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2" /><text
+          x="215.0" y="183.0" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Application</text>
+        <rect x="420" y="50" width="120" height="52" rx="12" fill="#fffbeb" stroke="#b45309" stroke-width="2" /><text
+          x="480.0" y="81.0" text-anchor="middle" font-size="15" font-weight="600" fill="#78350f">Cache</text>
+        <path d="M230 150 V62 H416" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-cache-aside)" /><text x="240" y="55" text-anchor="start" font-size="13" fill="#111827">
+          <tspan x="240" dy="0">1. Check if data in cache</tspan>
+        </text>
+        <path d="M262 150 V92 H416" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-cache-aside)" /><text x="272" y="86" text-anchor="start" font-size="13" fill="#111827">
+          <tspan x="272" dy="0">3. Update cache</tspan>
+        </text>
+        <path d="M150 170 H14" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-cache-aside)" /><text x="14" y="162" text-anchor="start" font-size="13" fill="#111827">
+          <tspan x="14" dy="0">2a. If yes, return</tspan>
+        </text>
+        <path d="M150 196 H14" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-cache-aside)" /><text x="14" y="214" text-anchor="start" font-size="13" fill="#111827">
+          <tspan x="14" dy="0">4. Return</tspan>
+        </text>
+        <path d="M215 206 V290 H444" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-cache-aside)" /><text x="228" y="282" text-anchor="start" font-size="13" fill="#111827">
+          <tspan x="228" dy="0">2b. If no, get from database</tspan>
+        </text>
+        <rect x="450" y="262" width="50" height="56" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="2" />
+        <rect x="458" y="271" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="486" cy="276" r="2" fill="#047857" />
+        <rect x="458" y="286" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="486" cy="291" r="2" fill="#047857" />
+        <rect x="458" y="301" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="486" cy="306" r="2" fill="#047857" /><text x="475" y="338" text-anchor="middle" font-size="14"
+          font-weight="600" fill="#064e3b">Database</text>
+      </svg>
+      <h3>How it works</h3>
+      <ul class="steps">
+        <li><span class="badge">1</span><span>The application checks the cache for the requested key.</span></li>
+        <li><span class="badge">2a</span><span>Cache hit: the value is found, so the application returns it straight
+            away. The database is never touched.</span></li>
+        <li><span class="badge">2b</span><span>Cache miss: the application queries the database for the data.</span>
+        </li>
+        <li><span class="badge">3</span><span>The application stores the result in the cache (usually with a TTL) so the
+            next request is a hit.</span></li>
+        <li><span class="badge">4</span><span>The application returns the data to the caller.</span></li>
+      </ul>
+      <div class="cols">
+        <div class="good">
+          <h3>Advantages</h3>
+          <ul>
+            <li>Only requested data is cached, so memory is not wasted.</li>
+            <li>Resilient: if the cache is down, the application can still read from the database.</li>
+            <li>Simple, widely understood, and works with any cache.</li>
+          </ul>
+        </div>
+        <div class="bad">
+          <h3>Trade-offs</h3>
+          <ul>
+            <li>The first request for a key always pays the cache-miss penalty.</li>
+            <li>Data can go stale if the database changes and the entry is not invalidated or expired.</li>
+            <li>Caching logic lives in application code and must be repeated wherever it is needed.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="best"><strong>Best for:</strong> Read-heavy workloads where some staleness is acceptable, such as
+        product catalogues, user profiles and reference data.</p>
+    </section>
+    <section class="strategy" id="read-through">
+      <header>
+        <h2>Read-through</h2><span class="tag">Read strategy</span><span class="alias">Also known as: Cache as the data
+          gateway</span>
+      </header>
+      <p>The application talks only to the cache. When the data is missing, the cache itself loads it from the database,
+        stores it and returns it, so the loading logic is hidden from the application.</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" class="diagram" role="img"
+        aria-labelledby="t-read-through d-read-through" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+        <title id="t-read-through">Read-through diagram</title>
+        <desc id="d-read-through">The application reads only from the cache (1). On a miss the cache itself gets the
+          data from the database and updates itself (2) before returning it.</desc>
+        <defs>
+          <marker id="ah-read-through" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+            orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        <rect x="1" y="1" width="598" height="338" rx="14" fill="#ffffff" stroke="#d1d5db" />
+        <rect x="30" y="110" width="130" height="56" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2" /><text
+          x="95.0" y="143.0" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Application</text>
+        <rect x="400" y="110" width="120" height="56" rx="12" fill="#fffbeb" stroke="#b45309" stroke-width="2" /><text
+          x="460.0" y="143.0" text-anchor="middle" font-size="15" font-weight="600" fill="#78350f">Cache</text>
+        <path d="M160 138 H396" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-read-through)" /><text x="278" y="130" text-anchor="middle" font-size="13" fill="#111827">
+          <tspan x="278" dy="0">1. Read from cache</tspan>
+        </text>
+        <path d="M424 170 L346 258" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-read-through)" />
+        <path d="M346 282 L452 170" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-read-through)" /><text x="440" y="206" text-anchor="start" font-size="13" fill="#111827">
+          <tspan x="440" dy="0">2. If not in cache, get</tspan>
+          <tspan x="440" dy="16">from DB, update cache</tspan>
+        </text>
+        <rect x="290" y="252" width="50" height="56" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="2" />
+        <rect x="298" y="261" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="326" cy="266" r="2" fill="#047857" />
+        <rect x="298" y="276" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="326" cy="281" r="2" fill="#047857" />
+        <rect x="298" y="291" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="326" cy="296" r="2" fill="#047857" /><text x="315" y="328" text-anchor="middle" font-size="14"
+          font-weight="600" fill="#064e3b">Database</text>
+      </svg>
+      <h3>How it works</h3>
+      <ul class="steps">
+        <li><span class="badge">1</span><span>The application always reads from the cache, never directly from the
+            database.</span></li>
+        <li><span class="badge">2</span><span>On a miss, the cache fetches the data from the database and updates
+            itself. Either way, the cache then returns the data to the application.</span></li>
+      </ul>
+      <div class="cols">
+        <div class="good">
+          <h3>Advantages</h3>
+          <ul>
+            <li>Application code is simpler: one read call, no miss-handling branch.</li>
+            <li>Loading logic is defined once, in the cache layer, so behaviour is consistent.</li>
+            <li>Pairs naturally with write-through for consistent reads and writes.</li>
+          </ul>
+        </div>
+        <div class="bad">
+          <h3>Trade-offs</h3>
+          <ul>
+            <li>Needs a cache provider or library that supports loaders.</li>
+            <li>The first read of a key is still slow.</li>
+            <li>The cache becomes a critical dependency: if it fails, reads fail.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="best"><strong>Best for:</strong> Read-heavy systems using a cache platform with built-in loaders (for
+        example NCache, Hazelcast, Ehcache or Oracle Coherence), where you want data access hidden behind a single
+        interface.</p>
+    </section>
+    <section class="strategy" id="refresh-ahead">
+      <header>
+        <h2>Refresh-ahead</h2><span class="tag">Read strategy</span><span class="alias">Also known as: Prefetch</span>
+      </header>
+      <p>The cache predicts which entries will be needed again and reloads them in the background before they expire.
+        Frequently used data stays warm, so readers rarely see a miss or a slow reload.</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" class="diagram" role="img"
+        aria-labelledby="t-refresh-ahead d-refresh-ahead"
+        font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+        <title id="t-refresh-ahead">Refresh-ahead diagram</title>
+        <desc id="d-refresh-ahead">The application reads from the cache (1) and gets the value back at once (2). If the
+          entry has passed the refresh-ahead factor, the cache asynchronously reloads it from the database (3).</desc>
+        <defs>
+          <marker id="ah-refresh-ahead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+            orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        <rect x="1" y="1" width="598" height="338" rx="14" fill="#ffffff" stroke="#d1d5db" />
+        <rect x="100" y="120" width="130" height="56" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2" /><text
+          x="165.0" y="153.0" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Application</text>
+        <rect x="400" y="120" width="120" height="56" rx="12" fill="#fffbeb" stroke="#b45309" stroke-width="2" /><text
+          x="460.0" y="153.0" text-anchor="middle" font-size="15" font-weight="600" fill="#78350f">Cache</text>
+        <path d="M230 148 H396" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-refresh-ahead)" /><text x="313" y="140" text-anchor="middle" font-size="13"
+          fill="#111827">
+          <tspan x="313" dy="0">1. Read from cache</tspan>
+        </text>
+        <path d="M100 148 H14" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-refresh-ahead)" /><text x="14" y="140" text-anchor="start" font-size="13" fill="#111827">
+          <tspan x="14" dy="0">2. Return</tspan>
+        </text>
+        <path d="M430 180 V264 H246" fill="none" stroke="#374151" stroke-width="2" stroke-dasharray="7 5"
+          stroke-linejoin="round" marker-end="url(#ah-refresh-ahead)" />
+        <path d="M246 296 H470 V180" fill="none" stroke="#374151" stroke-width="2" stroke-dasharray="7 5"
+          stroke-linejoin="round" marker-end="url(#ah-refresh-ahead)" /><text x="338" y="202" text-anchor="middle"
+          font-size="13" fill="#111827">
+          <tspan x="338" dy="0">3. If exceeds</tspan>
+          <tspan x="338" dy="16">refresh-ahead factor,</tspan>
+          <tspan x="338" dy="16">asynchronously refresh</tspan>
+          <tspan x="338" dy="16">data in cache</tspan>
+        </text>
+        <rect x="190" y="252" width="50" height="56" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="2" />
+        <rect x="198" y="261" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="226" cy="266" r="2" fill="#047857" />
+        <rect x="198" y="276" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="226" cy="281" r="2" fill="#047857" />
+        <rect x="198" y="291" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="226" cy="296" r="2" fill="#047857" /><text x="215" y="328" text-anchor="middle" font-size="14"
+          font-weight="600" fill="#064e3b">Database</text>
+      </svg>
+      <h3>How it works</h3>
+      <ul class="steps">
+        <li><span class="badge">1</span><span>The application reads the key from the cache.</span></li>
+        <li><span class="badge">2</span><span>The cache returns the current value immediately, with no waiting.</span>
+        </li>
+        <li><span class="badge">3</span><span>If the entry&#x27;s age has passed the refresh-ahead factor (for example
+            75% of its TTL), the cache asynchronously reloads it from the database and replaces the cached value.</span>
+        </li>
+      </ul>
+      <div class="cols">
+        <div class="good">
+          <h3>Advantages</h3>
+          <ul>
+            <li>Very low read latency for hot keys.</li>
+            <li>Avoids the latency spike and stampede that happen when a popular entry expires.</li>
+            <li>Refreshing happens off the request path.</li>
+          </ul>
+        </div>
+        <div class="bad">
+          <h3>Trade-offs</h3>
+          <ul>
+            <li>More complex: needs access tracking and a tuned refresh-ahead factor.</li>
+            <li>Wasted database load if the prediction is wrong and the entry is never read again.</li>
+            <li>Data can still be stale between refreshes.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="best"><strong>Best for:</strong> Hot data with predictable access patterns, such as leaderboards,
+        exchange rates, feature flags and dashboard summaries.</p>
+    </section>
+    <section class="strategy" id="write-through">
+      <header>
+        <h2>Write-through</h2><span class="tag">Write strategy</span><span class="alias">Also known as: Synchronous
+          write</span>
+      </header>
+      <p>Every write goes to the cache and is written to the database in the same operation. The write only completes
+        once both have the data, so the cache and the database never disagree.</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" class="diagram" role="img"
+        aria-labelledby="t-write-through d-write-through"
+        font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+        <title id="t-write-through">Write-through diagram</title>
+        <desc id="d-write-through">The application writes to the cache (1). The cache synchronously writes the same data
+          to the database (2).</desc>
+        <defs>
+          <marker id="ah-write-through" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+            orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        <rect x="1" y="1" width="598" height="338" rx="14" fill="#ffffff" stroke="#d1d5db" />
+        <rect x="40" y="110" width="130" height="56" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2" /><text
+          x="105.0" y="143.0" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Application</text>
+        <rect x="400" y="110" width="120" height="56" rx="12" fill="#fffbeb" stroke="#b45309" stroke-width="2" /><text
+          x="460.0" y="143.0" text-anchor="middle" font-size="15" font-weight="600" fill="#78350f">Cache</text>
+        <path d="M170 138 H396" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-write-through)" /><text x="283" y="130" text-anchor="middle" font-size="13"
+          fill="#111827">
+          <tspan x="283" dy="0">1. Write to cache</tspan>
+        </text>
+        <path d="M470 170 V278 H286" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-write-through)" /><text x="456" y="214" text-anchor="end" font-size="13" fill="#111827">
+          <tspan x="456" dy="0">2. Synchronously</tspan>
+          <tspan x="456" dy="16">write to DB</tspan>
+        </text>
+        <rect x="230" y="250" width="50" height="56" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="2" />
+        <rect x="238" y="259" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="266" cy="264" r="2" fill="#047857" />
+        <rect x="238" y="274" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="266" cy="279" r="2" fill="#047857" />
+        <rect x="238" y="289" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="266" cy="294" r="2" fill="#047857" /><text x="255" y="326" text-anchor="middle" font-size="14"
+          font-weight="600" fill="#064e3b">Database</text>
+      </svg>
+      <h3>How it works</h3>
+      <ul class="steps">
+        <li><span class="badge">1</span><span>The application writes the data to the cache.</span></li>
+        <li><span class="badge">2</span><span>The cache synchronously writes the same data to the database. Only after
+            this succeeds is the write acknowledged to the application.</span></li>
+      </ul>
+      <div class="cols">
+        <div class="good">
+          <h3>Advantages</h3>
+          <ul>
+            <li>Cache and database stay consistent.</li>
+            <li>Reads straight after a write are cache hits, with no stale values.</li>
+            <li>Data is durable as soon as the write returns.</li>
+          </ul>
+        </div>
+        <div class="bad">
+          <h3>Trade-offs</h3>
+          <ul>
+            <li>Higher write latency, because every write waits for two stores.</li>
+            <li>Data that is written but rarely read still occupies cache memory.</li>
+            <li>A database failure fails the write and must be handled by the cache layer.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="best"><strong>Best for:</strong> Systems that need read-after-write consistency, such as account
+        settings, inventory counts and financial records. Commonly paired with read-through.</p>
+    </section>
+    <section class="strategy" id="write-behind">
+      <header>
+        <h2>Write-behind</h2><span class="tag">Write strategy</span><span class="alias">Also known as: Write-back</span>
+      </header>
+      <p>The application writes only to the cache, which acknowledges at once. The cache then updates the database
+        later, in the background, often batching or coalescing several writes into one.</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" class="diagram" role="img"
+        aria-labelledby="t-write-behind d-write-behind" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+        <title id="t-write-behind">Write-behind diagram</title>
+        <desc id="d-write-behind">The application writes to the cache (1). The cache asynchronously writes the data to
+          the database later (2).</desc>
+        <defs>
+          <marker id="ah-write-behind" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+            orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        <rect x="1" y="1" width="598" height="338" rx="14" fill="#ffffff" stroke="#d1d5db" />
+        <rect x="40" y="110" width="130" height="56" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2" /><text
+          x="105.0" y="143.0" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Application</text>
+        <rect x="400" y="110" width="120" height="56" rx="12" fill="#fffbeb" stroke="#b45309" stroke-width="2" /><text
+          x="460.0" y="143.0" text-anchor="middle" font-size="15" font-weight="600" fill="#78350f">Cache</text>
+        <path d="M170 138 H396" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-write-behind)" /><text x="283" y="130" text-anchor="middle" font-size="13" fill="#111827">
+          <tspan x="283" dy="0">1. Write to cache</tspan>
+        </text>
+        <path d="M470 170 V278 H356" fill="none" stroke="#374151" stroke-width="2" stroke-dasharray="7 5"
+          stroke-linejoin="round" marker-end="url(#ah-write-behind)" /><text x="456" y="214" text-anchor="end"
+          font-size="13" fill="#111827">
+          <tspan x="456" dy="0">2. Asynchronously</tspan>
+          <tspan x="456" dy="16">write to DB</tspan>
+        </text>
+        <rect x="300" y="250" width="50" height="56" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="2" />
+        <rect x="308" y="259" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="336" cy="264" r="2" fill="#047857" />
+        <rect x="308" y="274" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="336" cy="279" r="2" fill="#047857" />
+        <rect x="308" y="289" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="336" cy="294" r="2" fill="#047857" /><text x="325" y="326" text-anchor="middle" font-size="14"
+          font-weight="600" fill="#064e3b">Database</text>
+      </svg>
+      <h3>How it works</h3>
+      <ul class="steps">
+        <li><span class="badge">1</span><span>The application writes the data to the cache and gets an immediate
+            acknowledgement.</span></li>
+        <li><span class="badge">2</span><span>The cache asynchronously writes the data to the database, typically in
+            batches after a short delay.</span></li>
+      </ul>
+      <div class="cols">
+        <div class="good">
+          <h3>Advantages</h3>
+          <ul>
+            <li>Lowest write latency of the write strategies.</li>
+            <li>Batching and coalescing reduce the number of database writes and absorb traffic spikes.</li>
+            <li>The application is shielded from slow or briefly unavailable databases.</li>
+          </ul>
+        </div>
+        <div class="bad">
+          <h3>Trade-offs</h3>
+          <ul>
+            <li>Risk of data loss if the cache fails before the data is flushed.</li>
+            <li>The database is only eventually consistent with the cache.</li>
+            <li>Needs careful handling of write ordering, retries and failures.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="best"><strong>Best for:</strong> Write-heavy workloads that can tolerate a small loss window, such as
+        counters, activity feeds, analytics events and session data.</p>
+    </section>
+    <section class="strategy" id="write-around">
+      <header>
+        <h2>Write-around</h2><span class="tag">Write strategy</span><span class="alias">Also known as: Bypass cache on
+          write</span>
+      </header>
+      <p>Writes go directly to the database and skip the cache, so data that is written once and rarely read does not
+        push useful entries out. The cache is brought up to date afterwards, or on the next read.</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 290" class="diagram" role="img"
+        aria-labelledby="t-write-around d-write-around" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+        <title id="t-write-around">Write-around diagram</title>
+        <desc id="d-write-around">The application writes directly to the database (1), bypassing the cache. The cache is
+          updated asynchronously afterwards (2).</desc>
+        <defs>
+          <marker id="ah-write-around" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+            orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="#374151" />
+          </marker>
+        </defs>
+        <rect x="1" y="1" width="598" height="288" rx="14" fill="#ffffff" stroke="#d1d5db" />
+        <rect x="40" y="70" width="130" height="56" rx="12" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2" /><text
+          x="105.0" y="103.0" text-anchor="middle" font-size="15" font-weight="600" fill="#1e3a8a">Application</text>
+        <rect x="435" y="70" width="50" height="56" rx="6" fill="#ecfdf5" stroke="#047857" stroke-width="2" />
+        <rect x="443" y="79" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="471" cy="84" r="2" fill="#047857" />
+        <rect x="443" y="94" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="471" cy="99" r="2" fill="#047857" />
+        <rect x="443" y="109" width="34" height="10" rx="2" fill="#ffffff" stroke="#047857" stroke-width="1.5" />
+        <circle cx="471" cy="114" r="2" fill="#047857" /><text x="460" y="146" text-anchor="middle" font-size="14"
+          font-weight="600" fill="#064e3b">Database</text>
+        <path d="M170 98 H428" fill="none" stroke="#374151" stroke-width="2" stroke-linejoin="round"
+          marker-end="url(#ah-write-around)" /><text x="299" y="90" text-anchor="middle" font-size="13" fill="#111827">
+          <tspan x="299" dy="0">1. Write to database</tspan>
+        </text>
+        <path d="M460 152 V206" fill="none" stroke="#374151" stroke-width="2" stroke-dasharray="7 5"
+          stroke-linejoin="round" marker-end="url(#ah-write-around)" /><text x="448" y="178" text-anchor="end"
+          font-size="13" fill="#111827">
+          <tspan x="448" dy="0">2. Asynchronously</tspan>
+          <tspan x="448" dy="16">write to cache</tspan>
+        </text>
+        <rect x="400" y="210" width="120" height="52" rx="12" fill="#fffbeb" stroke="#b45309" stroke-width="2" /><text
+          x="460.0" y="241.0" text-anchor="middle" font-size="15" font-weight="600" fill="#78350f">Cache</text>
+      </svg>
+      <h3>How it works</h3>
+      <ul class="steps">
+        <li><span class="badge">1</span><span>The application writes the data directly to the database, bypassing the
+            cache.</span></li>
+        <li><span class="badge">2</span><span>The cache is updated asynchronously afterwards (or is populated on the
+            next read miss), so it catches up with what was written.</span></li>
+      </ul>
+      <div class="cols">
+        <div class="good">
+          <h3>Advantages</h3>
+          <ul>
+            <li>Avoids cache pollution from data that is never read back.</li>
+            <li>The database is the source of truth immediately after the write.</li>
+            <li>Write path stays simple and fast.</li>
+          </ul>
+        </div>
+        <div class="bad">
+          <h3>Trade-offs</h3>
+          <ul>
+            <li>Reading recently written data is likely to be a cache miss.</li>
+            <li>Existing cache entries for the key are stale until they are updated or invalidated.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="best"><strong>Best for:</strong> Write-once, read-rarely data, such as logs, audit trails, bulk imports
+        and archives.</p>
+    </section>
+    <section id="comparison">
+      <h2>Comparison</h2>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th>Strategy</th>
+              <th>Type</th>
+              <th>Who talks to the database</th>
+              <th>Best for</th>
+              <th>Main trade-off</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cache-aside</td>
+              <td>Read</td>
+              <td>Application</td>
+              <td>Read-heavy, general purpose</td>
+              <td>Cold-miss latency; possible stale data</td>
+            </tr>
+            <tr>
+              <td>Read-through</td>
+              <td>Read</td>
+              <td>Cache (on a miss)</td>
+              <td>Read-heavy, cache with loader support</td>
+              <td>Cache is on the critical path</td>
+            </tr>
+            <tr>
+              <td>Refresh-ahead</td>
+              <td>Read</td>
+              <td>Cache (in the background)</td>
+              <td>Hot, predictable keys</td>
+              <td>Wasted refreshes if prediction is wrong</td>
+            </tr>
+            <tr>
+              <td>Write-through</td>
+              <td>Write</td>
+              <td>Cache (synchronously)</td>
+              <td>Read-after-write consistency</td>
+              <td>Slower writes</td>
+            </tr>
+            <tr>
+              <td>Write-behind</td>
+              <td>Write</td>
+              <td>Cache (asynchronously)</td>
+              <td>Write-heavy, loss-tolerant data</td>
+              <td>Data loss if the cache fails</td>
+            </tr>
+            <tr>
+              <td>Write-around</td>
+              <td>Write</td>
+              <td>Application (directly)</td>
+              <td>Write-once, read-rarely data</td>
+              <td>Misses on recently written data</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section id="combining-strategies" style="margin-top:32px">
+      <h2>Combining strategies</h2>
+      <p>In practice a read strategy and a write strategy are used together:</p>
+      <ul class="combine">
+        <li><strong>Read-through + write-through</strong>: all reads and writes go through the cache, keeping both
+          consistent.</li>
+        <li><strong>Cache-aside + write-around</strong>: the application reads lazily and writes straight to the
+          database, invalidating or updating the cache entry as needed.</li>
+        <li><strong>Read-through + write-behind</strong>: fastest option for read- and write-heavy data, at the cost of
+          a possible loss window.</li>
+        <li><strong>Refresh-ahead on top of any read strategy</strong>: keeps the hottest keys warm.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+
+</html>
